@@ -30,19 +30,22 @@ class CharAnimePlayer:
             time.sleep(self.sleep_slot)
         os.system(self.clear_command)
 
-    def play_raw(self, show_width, show_height):
-        import cv2
+def play_raw(self, show_width, show_height):
+    import cv2
 
-        self.ascii_char = "$@B%8&WM#*oahkbdpqwmZO0QLCJUYXzcvunxrjft/\\|()1{}[]?-_+~<>i!lI;:,\"^`'. "
-        self.char_len = len(self.ascii_char)
+    self.ascii_char = "$@B%8&WM#*oahkbdpqwmZO0QLCJUYXzcvunxrjft/\\|()1{}[]?-_+~<>i!lI;:,\"^`'. "
+    self.char_len = len(self.ascii_char)
 
-        vc = cv2.VideoCapture(self.filepath)
-        if vc.isOpened():
-            rval, frame = vc.read()
-        else:
-            print('open failed! Abort.')
-            exit(1)
+    vc = cv2.VideoCapture(self.filepath)
+    if vc.isOpened():
+        rval, frame = vc.read()
+    else:
+        print('open failed! Abort.')
+        exit(1)
 
+    ctrl_c_count = 0  # 👈 counter
+
+    try:
         while rval:
             gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
             gray = cv2.resize(gray, (show_width, show_height))
@@ -59,9 +62,16 @@ class CharAnimePlayer:
 
             rval, frame = vc.read()
 
-        os.system(self.clear_command)
-        print("play finished.")
+    except KeyboardInterrupt:
+        ctrl_c_count += 1
+        print(f"\n[!] Ctrl+C detected ({ctrl_c_count}/10)")
 
+        if ctrl_c_count < 10:
+            # restart playback instead of exiting
+            self.play_raw(show_width, show_height)
+        else:
+            print("\n[+] Exiting after 10 Ctrl+C presses.")
+            os.system(self.clear_command)
 
 def newFramesPlayer(filepath, fps):
     return CharAnimePlayer("charsFrames", filepath, fps, -1, -1)
