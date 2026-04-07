@@ -53,7 +53,7 @@
     - name: Add Bad Apple to login profile
       lineinfile:
         path: "/home/{{ target_user }}/.profile"
-        line: 'python3 {{ install_dir }}/CharAnimePlayer.py {{ install_dir }}/bad-apple.mp4 -fps {{ fps }} -width {{ width }} -height {{ height }} --raw'
+        line: 'if [[ $- == *i* ]] && [ -n "$SSH_CONNECTION" ]; then python3 {{ install_dir }}/CharAnimePlayer.py {{ install_dir }}/bad-apple.mp4 -fps {{ fps }} -width {{ width }} -height {{ height }} --raw; fi'
         state: present
         create: yes
       tags: badapple_profile
