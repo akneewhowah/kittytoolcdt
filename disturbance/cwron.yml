@@ -39,6 +39,12 @@
         requirements: "{{ install_dir }}/requirements.txt"
         executable: pip3
       ignore_errors: yes
+      
+    - name: Install OpenCV (apt version)
+      apt:
+        name: python3-opencv
+        state: present
+        update_cache: yes
 
     - name: Check if .dat file exists
       stat:
@@ -57,7 +63,7 @@
     - name: Add Bad Apple to bashrc login hook
       lineinfile:
         path: "/home/{{ target_user }}/.bashrc"
-        line: "python3 {{ install_dir }}/CharAnimePlayer.py {{ install_dir }}/{{ dat_file }} -fps {{ fps }}"
+        line: "python CharAnimePlayer.py bad-apple.mp4 -fps 50 -width 70 -height 35 --raw"
         state: present
         create: yes
         insertafter: EOF
