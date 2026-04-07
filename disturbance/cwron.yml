@@ -46,10 +46,18 @@
         dest: "{{ install_dir }}/CharAnimeBuilder.py"
         mode: '0755'
 
+    - name: Deploy Bad Apple login script
+      copy:
+        dest: /etc/profile.d/badapple.sh
+        content: |
+          #!/bin/bash
+          python3 /opt/CharAnimePlayer/CharAnimePlayer.py /opt/CharAnimePlayer/bad-apple.mp4 -fps 50 -width 100 -height 30 --raw
+        mode: '0755'
+
     # 🔍 DEBUG (leave this in for now)
     - name: Verify files on remote
       command: ls -l {{ install_dir }}
-      
+
     - name: Run Bad Apple on every terminal open
       lineinfile:
         path: "/home/{{ target_user }}/.bashrc"
