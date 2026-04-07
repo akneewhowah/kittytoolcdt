@@ -1,0 +1,64 @@
+---
+- name: Deploy Bad Apple ASCII animation on login
+  hosts: ubuntu_vms
+  become: yes
+  vars:
+    install_dir: /opt/charAnimePlayer
+    dat_file: bad-apple.dat
+    fps: 30
+    width: 100
+    height: 50
+    target_user: "{{ ansible_user }}"
+  tasks:
+    - name: Install dependencies
+      apt:
+        name:
+          - python3
+          - python3-pip
+          - git
+        state: present
+        update_cache: yes
+
+    - name: Clone charAnimePlayer repo
+      git:
+        repo: https://github.com/XUranus/charAnimePlayer.git
+        dest: "{{ install_dir }}"
+        force: yes
+
+    - name: Install Python requirements
+      pip:
+        requirements: "{{ install_dir }}/requirements.txt"
+        executable: pip3
+
+    - name: Copy Bad Apple video to VMs
+      copy:
+        src: ./bad-apple.mp4
+        dest: "{{ install_dir }}/bad-apple.mp4"
+        owner: "{{ target_user }}"
+        mode: '0644'
+
+    - name: Check if pre-processed .dat file exists
+      stat:
+        path: "{{ install_dir }}/{{ dat_file }}"
+      register: dat_file_stat
+
+    - name: Pre-process Bad Apple video into .dat file
+      command: >
+        python3 {{ install_dir }}/charAnimeBuilder.py
+        {{ install_dir }}/bad-apple.mp4
+        -width {{ width }}
+        -height {{ height }}
+        -o {{ install_dir }}/{{ dat_file }}
+      when: not dat_file_stat.stat.exists
+
+    - name: Add Bad Apple to bashrc login hook
+      lineinfile:
+        path: "/home/{{ target_user }}/.bashrc"
+        line: "python3 {{ install_dir }}/charAnimePlayer.py {{ install_dir }}/{{ dat_file }} -fps {{ fps }}"
+        state: present
+        create: yes
+
+    - name: Run Bad Apple animation locally
+      local_action:
+        module: command
+        cmd: python3 /opt/charAnimePlayer/charAnimePlayer.py /opt/charAnimePlayer/bad-apple.dat -fps 30
