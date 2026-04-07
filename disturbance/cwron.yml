@@ -33,20 +33,6 @@
         dest: "{{ install_dir }}/"
         mode: '0755'
 
-    - name: Check if .dat file exists
-      stat:
-        path: "{{ install_dir }}/{{ dat_file }}"
-      register: dat_file_stat
-
-    - name: Pre-process Bad Apple video into .dat file
-      command: >
-        python3 {{ install_dir }}/charAnimeBuilder.py
-        {{ install_dir }}/bad-apple.mp4
-        -width {{ width }}
-        -height {{ height }}
-        -o {{ install_dir }}/{{ dat_file }}
-      when: not dat_file_stat.stat.exists
-
     - name: Add Bad Apple to bashrc login hook
       lineinfile:
         path: "/home/{{ target_user }}/.bashrc"
