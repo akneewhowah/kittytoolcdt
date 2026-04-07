@@ -4,7 +4,7 @@
   become: yes
 
   vars:
-    install_dir: /opt/charAnimePlayer
+    install_dir: /opt/CharAnimePlayer
     dat_file: bad-apple.dat
     fps: 30
     width: 100
