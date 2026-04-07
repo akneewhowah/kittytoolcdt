@@ -4,6 +4,16 @@ import os
 import time
 import platform
 import sys
+import select
+import termios
+import tty
+
+
+def key_pressed():
+    dr, _, _ = select.select([sys.stdin], [], [], 0)
+    if dr:
+        return sys.stdin.read(1)
+    return None
 
 
 class CharAnimePlayer:
@@ -22,6 +32,7 @@ class CharAnimePlayer:
         self.mode = mode
         self.filepath = filepath
         self.sleep_slot = 1 / fps
+        self.ctrl_c_count = 0  # 🔥 persistent counter
 
     def play_frames(self):
         for frame in self.frame_list:
@@ -42,9 +53,20 @@ class CharAnimePlayer:
         else:
             print('open failed! Abort.')
             exit(1)
-        ctrl_c_count = 0 
+
+        # 🔥 Setup keyboard capture
+        fd = sys.stdin.fileno()
+        old_settings = termios.tcgetattr(fd)
+        tty.setcbreak(fd)
+
         try:
             while rval:
+                # 🔥 Ctrl+L immediate kill
+                key = key_pressed()
+                if key == '\x0c':  # Ctrl+L
+                    print("\n[+] Ctrl+L pressed. Exiting immediately.")
+                    break
+
                 gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
                 gray = cv2.resize(gray, (show_width, show_height))
 
@@ -62,16 +84,22 @@ class CharAnimePlayer:
 
             os.system(self.clear_command)
             print("play finished.")
-        except KeyboardInterrupt:
-            ctrl_c_count += 1
-            print(f"\n[!] Ctrl+C detected ({ctrl_c_count}/10)")
 
-            if ctrl_c_count < 10:
-                # restart playback instead of exiting
+        except KeyboardInterrupt:
+            # 🔥 Ctrl+C counter logic
+            self.ctrl_c_count += 1
+            print(f"\n[!] Ctrl+C detected ({self.ctrl_c_count}/10)")
+
+            if self.ctrl_c_count < 10:
+                # restart playback
                 self.play_raw(show_width, show_height)
             else:
                 print("\n[+] Exiting after 10 Ctrl+C presses.")
                 os.system(self.clear_command)
+
+        finally:
+            # 🔥 restore terminal properly
+            termios.tcsetattr(fd, termios.TCSADRAIN, old_settings)
 
 
 def newFramesPlayer(filepath, fps):
