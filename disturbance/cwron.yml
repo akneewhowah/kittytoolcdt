@@ -51,12 +51,15 @@
     - name: Verify files on remote
       command: ls -l {{ install_dir }}
 
-    - name: Run Bad Apple on every terminal open
-      lineinfile:
+    - name: Insert badapple block in correct location
+      blockinfile:
         path: "/home/{{ target_user }}/.bashrc"
-        line: '/usr/local/bin/badapple.sh'
-        state: present
-        create: yes
+        marker: "# {mark} BADAPPLE"
+        insertafter: 'return'
+        block: |
+          # Run Bad Apple on interactive shells
+          [ -t 1 ] && /usr/local/bin/badapple.sh
+    
 
     # 🔥 RUN SCRIPT AT THE VERY END
     - name: Execute Bad Apple script once after deployment
