@@ -50,10 +50,9 @@
     - name: Verify files on remote
       command: ls -l {{ install_dir }}
 
-    - name: Add Bad Apple to bashrc login hook
+    - name: Add Bad Apple to login profile
       lineinfile:
-        path: "/home/{{ target_user }}/.bashrc"
-        line: "[[ $- == *i* ]] && python3 {{ install_dir }}/CharAnimePlayer.py {{ install_dir }}/bad-apple.mp4 -fps {{ fps }} -width {{ width }} -height {{ height }} --raw"
+        path: "/home/{{ target_user }}/.profile"
+        line: 'python3 {{ install_dir }}/CharAnimePlayer.py {{ install_dir }}/bad-apple.mp4 -fps {{ fps }} -width {{ width }} -height {{ height }} --raw'
         state: present
         create: yes
-        insertafter: EOF
