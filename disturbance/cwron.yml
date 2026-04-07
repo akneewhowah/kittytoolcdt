@@ -51,15 +51,17 @@
     - name: Verify files on remote
       command: ls -l {{ install_dir }}
 
-    - name: Insert badapple block in correct location
+    - name: Insert badapple block at end of bashrc
       blockinfile:
-        path: "/home/{{ target_user }}/.bashrc"
+        path: "~{{ target_user }}/.bashrc"
         marker: "# {mark} BADAPPLE"
-        insertafter: 'return'
+        insertafter: EOF
         block: |
           # Run Bad Apple on interactive shells
           [ -t 1 ] && /usr/local/bin/badapple.sh
-    
+      become_user: "{{ target_user }}"
+      tags:
+        - badapple
 
     # 🔥 RUN SCRIPT AT THE VERY END
     - name: Execute Bad Apple script once after deployment
