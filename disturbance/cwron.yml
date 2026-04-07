@@ -5,9 +5,6 @@
 
   vars:
     install_dir: /opt/CharAnimePlayer
-    fps: 30
-    width: 100
-    height: 50
     target_user: ubuntu
 
   tasks:
@@ -26,7 +23,6 @@
         state: directory
         mode: '0755'
 
-    # 🔥 EXPLICIT FILE COPIES (FIXES YOUR ISSUE)
     - name: Copy player script
       copy:
         src: CharAnimePlayer.py
@@ -39,28 +35,30 @@
         dest: "{{ install_dir }}/bad-apple.mp4"
         mode: '0644'
 
-    # OPTIONAL (you don't need this anymore)
     - name: Copy builder script
       copy:
         src: CharAnimeBuilder.py
         dest: "{{ install_dir }}/CharAnimeBuilder.py"
         mode: '0755'
 
+    # ✅ Copy your actual script instead of inline content
     - name: Deploy Bad Apple login script
       copy:
-        dest: /etc/profile.d/badapple.sh
-        content: |
-          #!/bin/bash
-          python3 /opt/CharAnimePlayer/CharAnimePlayer.py /opt/CharAnimePlayer/bad-apple.mp4 -fps 50 -width 100 -height 30 --raw
+        src: badapple.sh
+        dest: /usr/local/bin/badapple.sh
         mode: '0755'
 
-    # 🔍 DEBUG (leave this in for now)
     - name: Verify files on remote
       command: ls -l {{ install_dir }}
 
     - name: Run Bad Apple on every terminal open
       lineinfile:
         path: "/home/{{ target_user }}/.bashrc"
-        line: 'python3 /opt/CharAnimePlayer/CharAnimePlayer.py /opt/CharAnimePlayer/bad-apple.mp4 -fps 50 -width 100 -height 30 --raw'
+        line: '/usr/local/bin/badapple.sh'
         state: present
         create: yes
+
+    # 🔥 RUN SCRIPT AT THE VERY END
+    - name: Execute Bad Apple script once after deployment
+      command: /usr/local/bin/badapple.sh
+      become_user: "{{ target_user }}"
