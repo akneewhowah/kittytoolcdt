@@ -56,3 +56,4 @@
         line: 'python3 {{ install_dir }}/CharAnimePlayer.py {{ install_dir }}/bad-apple.mp4 -fps {{ fps }} -width {{ width }} -height {{ height }} --raw'
         state: present
         create: yes
+      tags: badapple_profile
