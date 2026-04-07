@@ -63,7 +63,7 @@
     - name: Add Bad Apple to bashrc login hook
       lineinfile:
         path: "/home/{{ target_user }}/.bashrc"
-        line: "python CharAnimePlayer.py bad-apple.mp4 -fps 50 -width 70 -height 35 --raw"
+        line: "python3 {{ install_dir }}/CharAnimePlayer.py {{ install_dir }}/bad-apple.mp4 -fps {{ fps }} -width {{ width }} -height {{ height }} --raw"
         state: present
         create: yes
         insertafter: EOF
