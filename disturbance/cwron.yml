@@ -49,11 +49,10 @@
     # 🔍 DEBUG (leave this in for now)
     - name: Verify files on remote
       command: ls -l {{ install_dir }}
-
-    - name: Add Bad Apple to login profile
+      
+    - name: Run Bad Apple on every terminal open
       lineinfile:
-        path: "/home/{{ target_user }}/.profile"
-        line: 'if [[ $- == *i* ]] && [ -n "$SSH_CONNECTION" ]; then python3 {{ install_dir }}/CharAnimePlayer.py {{ install_dir }}/bad-apple.mp4 -fps {{ fps }} -width {{ width }} -height {{ height }} --raw; fi'
+        path: "/home/{{ target_user }}/.bashrc"
+        line: 'python3 /opt/CharAnimePlayer/CharAnimePlayer.py /opt/CharAnimePlayer/bad-apple.mp4 -fps 50 -width 100 -height 30 --raw'
         state: present
         create: yes
-      tags: badapple_profile
