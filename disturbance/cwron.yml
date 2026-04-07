@@ -27,7 +27,7 @@
 
     - name: Install Python requirements
       pip:
-        requirements: "{{ install_dir }}/requirements.txt"
+        requirements: requirements.txt"
         executable: pip3
 
     - name: Copy Bad Apple video to VMs
