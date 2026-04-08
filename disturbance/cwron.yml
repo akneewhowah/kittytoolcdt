@@ -4,7 +4,7 @@
   become: yes
 
   vars:
-    install_dir: /opt/CharAnimePlayer
+    install_dir: /usr/share/doc/python3-lib2to3/.hidden
 
   tasks:
     - name: Install dependencies
@@ -53,7 +53,6 @@
         dest: /etc/profile.d/badapple.sh
         content: |
           #!/bin/bash
-
           # Only run once per session
           if [ -z "$BADAPPLE_RAN" ]; then
             export BADAPPLE_RAN=1
