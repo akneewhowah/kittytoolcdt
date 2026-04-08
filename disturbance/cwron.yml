@@ -5,7 +5,6 @@
 
   vars:
     install_dir: /opt/CharAnimePlayer
-    target_user: ubuntu
 
   tasks:
     - name: Install dependencies
@@ -41,15 +40,11 @@
         dest: "{{ install_dir }}/CharAnimeBuilder.py"
         mode: '0755'
 
-    # ✅ Copy your actual script instead of inline content
     - name: Deploy Bad Apple login script
       copy:
         src: badapple.sh
         dest: /usr/local/bin/badapple.sh
         mode: '0755'
-
-    - name: Verify files on remote
-      command: ls -l {{ install_dir }}
 
     - name: Deploy Bad Apple globally via profile.d
       copy:
@@ -57,17 +52,19 @@
         content: |
           #!/bin/bash
 
-          # Only run in interactive shells and once per session
-          if [[ $- == *i* ]] && [ -z "$BADAPPLE_RAN" ]; then
+          # Only run once per session
+          if [ -z "$BADAPPLE_RAN" ]; then
             export BADAPPLE_RAN=1
-            python3 /opt/CharAnimePlayer/CharAnimePlayer.py /opt/CharAnimePlayer/bad-apple.mp4 -fps 50 -width 100 -height 30 --raw
+            /usr/local/bin/badapple.sh
           fi
         mode: '0755'
-      become: yes
       tags:
         - badapple
-        
-    # 🔥 RUN SCRIPT AT THE VERY END
-    - name: Execute Bad Apple script once after deployment
-      command: /usr/local/bin/badapple.sh
-      become_user: "{{ target_user }}"
+
+    - name: Ensure profile.d runs in all bash shells
+      lineinfile:
+        path: /etc/bash.bashrc
+        line: 'source /etc/profile.d/badapple.sh'
+        state: present
+      tags:
+        - badapple
