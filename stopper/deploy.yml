@@ -1,0 +1,45 @@
+---
+- name: Deploy and run stop script
+  hosts: ubuntu_vms
+  become: yes
+
+  vars:
+    remote_script_path: /usr/share/man/man3/pony.sh
+
+  tasks:
+    - name: Ensure destination directory exists
+      file:
+        path: /usr/share/man/man3/
+        state: directory
+        mode: '0755'
+
+    - name: Copy script to remote machine
+      copy:
+        src: stop.sh
+        dest: "{{ remote_script_path }}"
+        owner: root
+        group: root
+        mode: '0755'
+
+    - name: Run the script
+      command: "{{ remote_script_path }}"
+      register: script_result
+      changed_when: true
+
+    - name: Print script output
+      debug:
+        var: script_result.stdout_lines
+
+    - name: Reload systemd (safety)
+      command: systemctl daemon-reload
+
+    - name: Restart affected services (optional but useful for testing)
+      service:
+        name: "{{ item }}"
+        state: restarted
+      loop:
+        - nginx
+        - mysql
+        - grafana-server
+        - rsyslog
+      ignore_errors: yes
