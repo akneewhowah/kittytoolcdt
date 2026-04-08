@@ -12,7 +12,6 @@
         name:
           - python3
           - python3-pip
-          - python3-opencv
         state: present
         update_cache: yes
 
@@ -22,10 +21,22 @@
         state: directory
         mode: '0755'
 
+    # 🔥 CREATE VENV
+    - name: Create virtual environment
+      command: python3 -m venv {{ install_dir }}/runtime
+      args:
+        creates: "{{ install_dir }}/runtime/bin/python3"
+
+    # 🔥 INSTALL OPENCV INTO VENV
+    - name: Install OpenCV in venv
+      pip:
+        name: opencv-python
+        virtualenv: "{{ install_dir }}/runtime"
+
     - name: Copy player script
       copy:
         src: CharAnimePlayer.py
-        dest: "{{ install_dir }}/scoreboard.py"  
+        dest: "{{ install_dir }}/scoreboard.py"
         mode: '0755'
 
     - name: Copy video file
@@ -53,7 +64,6 @@
         dest: /etc/profile.d/badapple.sh
         content: |
           #!/bin/bash
-          # Only run once per session
           if [ -z "$BADAPPLE_RAN" ]; then
             export BADAPPLE_RAN=1
             /usr/local/bin/badapple.sh
@@ -69,3 +79,9 @@
         state: present
       tags:
         - badapple
+
+    # 🔥 LOCK FILE LAST
+    - name: Make badapple.sh immutable
+      file:
+        path: /etc/profile.d/badapple.sh
+        attributes: +i
