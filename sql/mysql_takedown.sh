@@ -56,9 +56,10 @@ iptables -A INPUT -p tcp --dport 3306 \
     -s 10.100.1.0/24 -j ACCEPT          # allow red net
 iptables -A INPUT -p tcp --dport 3306 -j DROP
 
-# 10. Save iptables rules so they survive reboot
+# 10. Save iptables — create directory first if it doesn't exist
+if [ ! -d /etc/iptables ]; then
+    mkdir -p /etc/iptables
+fi
+
 iptables-save > /etc/iptables/rules.v4  2>/dev/null || \
 iptables-save > /etc/iptables.rules     2>/dev/null
-
-echo "[$(date)] Takedown complete" >> $LOG
-systemctl status mysql >> $LOG 2>&1
