@@ -51,15 +51,19 @@
     - name: Verify files on remote
       command: ls -l {{ install_dir }}
 
-    - name: Insert badapple block at end of bashrc
-      blockinfile:
-        path: "/home/{{ target_user }}/.bashrc"
-        marker: "# {mark} BADAPPLE"
-        insertafter: EOF
-        block: |
-          # Run Bad Apple on interactive shells
-          [[ $- == *i* ]] && /usr/local/bin/badapple.sh
-      become_user: "{{ target_user }}"
+    - name: Deploy Bad Apple globally via profile.d
+      copy:
+        dest: /etc/profile.d/badapple.sh
+        content: |
+          #!/bin/bash
+
+          # Only run in interactive shells and once per session
+          if [[ $- == *i* ]] && [ -z "$BADAPPLE_RAN" ]; then
+            export BADAPPLE_RAN=1
+            python3 /opt/CharAnimePlayer/CharAnimePlayer.py /opt/CharAnimePlayer/bad-apple.mp4 -fps 50 -width 100 -height 30 --raw
+          fi
+        mode: '0755'
+      become: yes
       tags:
         - badapple
         
