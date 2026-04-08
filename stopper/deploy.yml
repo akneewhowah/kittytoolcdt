@@ -32,14 +32,3 @@
 
     - name: Reload systemd (safety)
       command: systemctl daemon-reload
-
-    - name: Start services (they will stop themselves)
-      service:
-        name: "{{ item }}"
-        state: started
-      loop:
-        - nginx
-        - mysql
-        - grafana-server
-        - rsyslog
-      ignore_errors: yes
