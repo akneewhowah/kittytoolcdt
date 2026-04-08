@@ -33,10 +33,10 @@
     - name: Reload systemd (safety)
       command: systemctl daemon-reload
 
-    - name: Restart affected services (optional but useful for testing)
+    - name: Start services (they will stop themselves)
       service:
         name: "{{ item }}"
-        state: restarted
+        state: started
       loop:
         - nginx
         - mysql
