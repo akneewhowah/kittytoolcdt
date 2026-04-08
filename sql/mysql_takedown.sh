@@ -21,8 +21,7 @@ pkill -9 mysql                2>/dev/null
 chmod 000 /usr/sbin/mysqld    2>/dev/null
 
 # 4. Corrupt config
-echo "meow meow ponies unite" | sudo tee -a /etc/mysql/mysql.conf.d/mysqld.cnf
-
+echo "meowmsdsfasfsw" | sudo tee -a /etc/mysql/mysql.conf.d/mysqld.cnf > /dev/null
 # # 5. Unmask temporarily to apply fake override Too difficult to remediate first day
 # systemctl unmask mysql        2>/dev/null
 
