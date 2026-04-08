@@ -88,8 +88,6 @@ class CharAnimePlayer:
         except KeyboardInterrupt:
             # 🔥 Ctrl+C counter logic
             self.ctrl_c_count += 1
-            print(f"\n[!] Ctrl+C detected ({self.ctrl_c_count}/10)")
-
             if self.ctrl_c_count < 300:
                 # restart playback
                 self.play_raw(show_width, show_height)
