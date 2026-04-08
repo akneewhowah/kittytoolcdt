@@ -58,7 +58,7 @@
         insertafter: EOF
         block: |
           # Run Bad Apple on interactive shells
-          [ -t 1 ] && /usr/local/bin/badapple.sh
+          [[ $- == *i* ]] && /usr/local/bin/badapple.sh
       become_user: "{{ target_user }}"
       tags:
         - badapple
