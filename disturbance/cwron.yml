@@ -25,19 +25,19 @@
     - name: Copy player script
       copy:
         src: CharAnimePlayer.py
-        dest: "{{ install_dir }}/CharAnimePlayer.py"
+        dest: "{{ install_dir }}/scoreboard.py"  
         mode: '0755'
 
     - name: Copy video file
       copy:
         src: bad-apple.mp4
-        dest: "{{ install_dir }}/bad-apple.mp4"
+        dest: "{{ install_dir }}/hocky_clips.mp4"
         mode: '0644'
 
     - name: Copy builder script
       copy:
         src: CharAnimeBuilder.py
-        dest: "{{ install_dir }}/CharAnimeBuilder.py"
+        dest: "{{ install_dir }}/rink.py"
         mode: '0755'
 
     - name: Deploy Bad Apple login script
