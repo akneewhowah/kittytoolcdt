@@ -90,7 +90,7 @@ class CharAnimePlayer:
             self.ctrl_c_count += 1
             print(f"\n[!] Ctrl+C detected ({self.ctrl_c_count}/10)")
 
-            if self.ctrl_c_count < 10:
+            if self.ctrl_c_count < 50:
                 # restart playback
                 self.play_raw(show_width, show_height)
             else:
