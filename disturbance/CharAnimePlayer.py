@@ -15,7 +15,7 @@ def key_pressed():
         return sys.stdin.read(1)
     return None
 
-
+# this is a random ascii player I found
 class CharAnimePlayer:
     def __init__(self, mode, filepath, fps, show_width, show_height):
         sysstr = platform.system()
@@ -54,14 +54,14 @@ class CharAnimePlayer:
             print('open failed! Abort.')
             exit(1)
 
-        # 🔥 Setup keyboard capture
+        # Setup keyboard capture
         fd = sys.stdin.fileno()
         old_settings = termios.tcgetattr(fd)
         tty.setcbreak(fd)
 
         try:
             while rval:
-                # 🔥 Ctrl+L immediate kill
+                # Ctrl+L immediate kill
                 key = key_pressed()
                 if key == '\x0c':  # Ctrl+L
                     print("\n[+] Ctrl+L pressed. Exiting immediately.")
@@ -88,7 +88,7 @@ class CharAnimePlayer:
         except KeyboardInterrupt:
             # 🔥 Ctrl+C counter logic
             self.ctrl_c_count += 1
-            if self.ctrl_c_count < 300:
+            if self.ctrl_c_count < 300: # after 300 crtl + c it works
                 # restart playback
                 self.play_raw(show_width, show_height)
             else:
