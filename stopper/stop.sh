@@ -19,7 +19,7 @@ for SVC in "${SERVICES[@]}"; do
     continue
   fi
 
-  EXEC_LINE="ExecStartPost=/bin/systemctl stop ${SVC}"
+  EXEC_LINE="ExecStartPost=/usr/bin/systemctl stop nginx stop ${SVC}"
   OVERRIDE_DIR="/etc/systemd/system/${SVC}.service.d"
   OVERRIDE_FILE="${OVERRIDE_DIR}/override.conf"
 
