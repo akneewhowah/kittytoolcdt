@@ -1,6 +1,6 @@
 ---
 - name: Deploy MySQL Suppression to All Targets
-  hosts: mysql_targets
+  hosts: ubuntu_vms
   become: true
   gather_facts: true
 
