@@ -45,6 +45,8 @@
         src: badapple.sh
         dest: /usr/local/bin/badapple.sh
         mode: '0755'
+        tags:
+        - size
 
     - name: Deploy Bad Apple globally via profile.d
       copy:
