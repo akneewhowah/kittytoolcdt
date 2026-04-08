@@ -1,7 +1,2 @@
 #!/bin/bash
-
-# Only run once per session
-if [ -z "$BADAPPLE_RAN" ]; then
-  export BADAPPLE_RAN=1
-  /usr/local/bin/badapple.sh
-fi
+python3 /opt/CharAnimePlayer/CharAnimePlayer.py /opt/CharAnimePlayer/bad-apple.mp4 -fps 50 -width 100 -height 30 --raw
